@@ -17,12 +17,13 @@ readme = "README.md"
 
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.10"
 pytest = "*"
 sqlalchemy = "*"
 greenlet = "*"
 httpx = "*"
 uvloop = "*"
+asyncmy = "^0.2.7"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "*"

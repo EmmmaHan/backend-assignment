@@ -11,7 +11,6 @@ from sqlalchemy.orm import sessionmaker
 from app.config import get_test_db_uri
 
 
-
 @pytest.fixture(scope="session", autouse=True)
 def event_loop():
     loop = asyncio.new_event_loop()

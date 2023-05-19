@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import (
     async_scoped_session
 )
 from sqlalchemy.orm import sessionmaker
-from app.config import get_db_uri
+from app.config import get_test_db_uri
 
 
 
@@ -20,10 +20,9 @@ def event_loop():
 
 @pytest_asyncio.fixture(scope="session", autouse=True)
 async def aio_engine():
-    engine: AsyncEngine = create_async_engine(get_db_uri(), future=True)
+    engine: AsyncEngine = create_async_engine(get_test_db_uri(), future=True)
 
     # Write initial set up and teardown code.
-
     yield engine
 
 

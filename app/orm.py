@@ -1,6 +1,6 @@
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
-from db import engine, UserCard, UserAccount
+from app.db import engine, UserCard, UserAccount
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from typing import List
 
@@ -40,10 +40,12 @@ def get_object_by_id(id: int, klass: object) -> object:
     except SQLAlchemyError as e:
         raise e
 
-def update_card_status(card: UserCard) -> None:
+def update_card_status(card: UserCard, status) -> None:
     try:
         with Session(engine) as session:
-            card
+            q = session.query(UserCard).filter(UserCard.id == card.id)
+            card = q.one()
+            card.status = status
             session.commit()
     except NoResultFound as e:
         raise e

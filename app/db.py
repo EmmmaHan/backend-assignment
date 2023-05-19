@@ -1,14 +1,13 @@
-import os
 import sqlalchemy as db
 from sqlalchemy import MetaData, Column, Integer, String, DateTime, Date, ForeignKey
 from sqlalchemy_utils import PasswordType
 from sqlalchemy.sql import func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import mapped_column, relationship
-from errors import InvalidStateTransitonError
-from state_model import UserCardDeactive, UserCardActive, UserCardState
-from config import get_db_uri
-import utils
+from app.errors import InvalidStateTransitonError
+from app.state_model import UserCardDeactive, UserCardActive, UserCardState
+from app.config import get_db_uri
+import app.utils
 
 engine = db.create_engine(get_db_uri())
 connection = engine.connect()
@@ -36,7 +35,8 @@ class User(ExtendedBase, Base):
                 ],
                 deprecated=['md5_crypt']),
                 nullable=False)
-    user_accounts = relationship('UserAccount', back_populates="user")
+    user_accounts = relationship('UserAccount', back_populates="user", lazy='subquery')
+    cards = relationship('UserCard', back_populates='user', lazy='subquery')
 
     def __init__(self, first_name, last_name, email, password) -> None:
         self.first_name = first_name
@@ -54,11 +54,11 @@ class UserAccount(ExtendedBase, Base):
     user_id = mapped_column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     account_number = Column(String(30), nullable=False)
     balance = Column(Integer, default=0, nullable=False) # Integer for KRW
-    user = relationship('User', back_populates="user_accounts")
+    user = relationship('User', back_populates="user_accounts", lazy='subquery')
 
     def __init__(self, user_id, balance=0) -> None:
         self.user_id =user_id
-        self.account_number = utils.generate_random_string(20)
+        self.account_number = app.utils.generate_random_string(20)
         self.balance = balance
 
     def __repr__(self) -> str:
@@ -75,16 +75,16 @@ class UserCard(ExtendedBase, Base):
     status = Column(String(20), nullable=False)
     activated_at = Column(DateTime(timezone=True), nullable=True)
     deactivated_at = Column(DateTime(timezone=True), nullable=True)
+    user = relationship('User', back_populates="cards", lazy='subquery')
 
     def __init__(self, user_id, user_account_id) -> None:
         self.user_id = user_id
         self.user_account_id = user_account_id
-        self.card_number = utils.generate_random_numbers(12)
-        self.cvc = utils.generate_random_numbers(3)
-        self.status = repr(UserCardDeactive(self))
+        self.card_number = app.utils.generate_random_numbers(12)
+        self.cvc = app.utils.generate_random_numbers(3)
+        self.status = 'deactive'
     
     def transition_to(self, state: UserCardState):
-        print(f'{self}')
         self.status = repr(state(self))
 
     def get_state(self):
@@ -93,9 +93,9 @@ class UserCard(ExtendedBase, Base):
         state = ''
         match self.status:
             case 'active':
-                state =  UserCardActive
+                state =  UserCardActive(self)
             case 'deactive':
-                state = UserCardDeactive
+                state = UserCardDeactive(self)
             case '':
                 raise InvalidStateTransitonError("invalid state")
         return state

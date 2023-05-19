@@ -1,10 +1,10 @@
 from typing import List
-from errors import ObjectNotFoundError
-from orm import *
-from db import User, UserAccount, UserCard
+from app.errors import ObjectNotFoundError
+from app.orm import *
+from app.db import User, UserAccount, UserCard
 
-def create_user(first_name, last_name, email, password) -> None:
-    create_object(User(first_name, last_name, email, password))
+def create_user(first_name, last_name, email, password) -> int:
+    return create_object(User(first_name, last_name, email, password))
 
 def register_cards(cards: List[UserCard]):
     try: 
@@ -15,16 +15,14 @@ def register_cards(cards: List[UserCard]):
 def activate_card(card_id):
     try:
         card = get_object_by_id(card_id, UserCard)
-        card.get_status.activate_card()
-        update_card_status(card)
+        update_card_status(card,'active')
     except NoResultFound:
         ObjectNotFoundError(f"UserCard cannot be found with card_id: {card_id}")
 
 def deactivate_card(card_id):
     try:
         card = get_object_by_id(card_id, UserCard)
-        card.get_status.deactivate_card()
-        update_card_status(card)
+        update_card_status(card, 'deactive')
     except NoResultFound:
         ObjectNotFoundError(f"UserCard cannot be found with card_id: {card_id}")
 
@@ -35,14 +33,14 @@ def check_balance(user_account_id) -> int:
     except NoResultFound:
         raise ObjectNotFoundError(f"UserAccount cannot be found by user_account_id: {user_account_id}")
 
-def create_account(user_id, amount=0):
-    create_object(UserAccount(user_id, amount))
+def create_account(user_id, amount=0) -> int:
+    return create_object(UserAccount(user_id, amount))
     
 def withdraw_cash(user_account_id, amount):
     account = get_object_by_id(user_account_id, UserAccount)
     if amount <= 0:
         raise ValueError("Withdraw amount should be greater than 0.")
-    if account.amount - amount < 0:
+    if account.balance - amount < 0:
         raise ValueError("You cannot withdraw below 0 balance.")
     
     update_account_balance(user_account_id, amount)

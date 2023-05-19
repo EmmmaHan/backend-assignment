@@ -5,11 +5,10 @@ from sqlalchemy_utils import PasswordType
 from sqlalchemy.sql import func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import mapped_column, relationship
-# from errors import InvalidStateTransitonError
+from errors import InvalidStateTransitonError
 from state_model import UserCardDeactive, UserCardActive, UserCardState
 from config import get_db_uri
 import utils
-import sys
 
 engine = db.create_engine(get_db_uri())
 connection = engine.connect()
@@ -110,7 +109,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-def InvalidStateTransitonError(Exception):
-    pass

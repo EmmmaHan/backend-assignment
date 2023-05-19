@@ -1,11 +1,15 @@
+import os
 import sqlalchemy as db
 from sqlalchemy import MetaData, Column, Integer, String, DateTime, Date, ForeignKey
 from sqlalchemy_utils import PasswordType
 from sqlalchemy.sql import func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import mapped_column, relationship
+# from errors import InvalidStateTransitonError
+from state_model import UserCardDeactive, UserCardActive, UserCardState
 from config import get_db_uri
 import utils
+import sys
 
 engine = db.create_engine(get_db_uri())
 connection = engine.connect()
@@ -78,12 +82,35 @@ class UserCard(ExtendedBase, Base):
         self.user_account_id = user_account_id
         self.card_number = utils.generate_random_numbers(12)
         self.cvc = utils.generate_random_numbers(3)
+        self.status = repr(UserCardDeactive(self))
+    
+    def transition_to(self, state: UserCardState):
+        print(f'{self}')
+        self.status = repr(state(self))
 
+    def get_state(self):
+        """ Temporary fix for trying saving status as string in db"""
+
+        state = ''
+        match self.status:
+            case 'active':
+                state =  UserCardActive
+            case 'deactive':
+                state = UserCardDeactive
+            case '':
+                raise InvalidStateTransitonError("invalid state")
+        return state
+            
+        
     def __repr__(self) -> str:
-        return f"<UserCard(id:{self.id}, user_id:{self.user_id}, user_account_id:{self.user_account_id}, card_number:{self.card_number}, status:{self.status}, expire_at:{self.expire_at}, activated_at:{self.activated_at}, deactivated_at:{self.deactivated_at}, created_at:{self.created_at}, updated_at:{self.updated_at})>"
+        return f"<UserCard(id:{self.id}, user_id:{self.user_id}, user_account_id:{self.user_account_id}, card_number:{self.card_number}, status:{self.status}, activated_at:{self.activated_at}, deactivated_at:{self.deactivated_at}, created_at:{self.created_at}, updated_at:{self.updated_at})>"
 
 def main():
     Base.metadata.create_all(engine)
 
 if __name__ == '__main__':
     main()
+
+
+def InvalidStateTransitonError(Exception):
+    pass

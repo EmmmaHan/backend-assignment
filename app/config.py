@@ -3,7 +3,7 @@ import os
 
 def get_db_uri():
     return "{}://{}:{}@{}:{}/{}".format(
-    os.getenv("db_protocol","mysql+asyncmy"),
+    os.getenv("db_protocol","mysql+mysqlconnector"),
     os.getenv("db_user","root"),
     os.getenv("db_password","ffbb"),
     os.getenv("db_host","localhost"),
